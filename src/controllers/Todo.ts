@@ -20,6 +20,7 @@ export const createTodo = async (req: Request, res: Response) => {
         todo: newTodo,
       },
     });
+
   } catch (err: any) {
     if (err.code === 11000) {
       return res.status(400).json({
@@ -150,3 +151,4 @@ export const updateTodo = async (req: Request, res: Response) => {
     });
   }
 };
+
