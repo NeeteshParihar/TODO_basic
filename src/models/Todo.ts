@@ -8,6 +8,8 @@ export interface ITodo {
     user: Schema.Types.ObjectId | string
 }
 
+
+
 const TodoSchema = new Schema<ITodo>({
     title: { type: String, required: true, trim: true },
     date: { type: Date, required: true },

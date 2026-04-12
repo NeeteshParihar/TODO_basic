@@ -1,23 +1,21 @@
-import { Schema, model, type Document } from "mongoose";
+import  { Schema, model, Types } from "mongoose";
 
-export interface IRefreshToken extends Document {
-  token: string;
-  user: Schema.Types.ObjectId;
-  expiryDate: Date;
+interface IRefreshToken  { 
+  refreshToken: string;
+  isRevoked: boolean;
+  expiresAt: Date;
 }
 
-const RefreshTokenSchema = new Schema<IRefreshToken>({
-  token: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  expiryDate: { type: Date, required: true },
+
+const RefreshTokenSchema = new Schema<IRefreshToken>({ 
+  refreshToken: { type: String, required: true },
+  isRevoked: { type: Boolean, default: false },
+  expiresAt: { type: Date, required: true }
 });
 
-export default model<IRefreshToken>("RefreshToken", RefreshTokenSchema);/*  */
+
+const RefreshToken = model("refreshToken", RefreshTokenSchema);
+
+export default RefreshToken;
+
+
