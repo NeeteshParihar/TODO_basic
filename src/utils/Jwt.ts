@@ -18,11 +18,11 @@ export const generateJwt = (payload: IPayload): string => {
   return token;
 };
 
-export const decode = (token: string) => {
+export const decode = (token: string): IPayload | null => {
   try {
     // verify() checks the Signature AND the 'exp' claim automatically
     const payload = jwt.verify(token, SECRET);
-    return payload;
+    return payload as  IPayload ;
   } catch (error) {
     return null;
   }
@@ -48,19 +48,22 @@ export const generateRefToken = (Payload: { userId: string }): string => {
   return refToken;
 };
 
-
 export const setRefToken = (refToken: string, res: Response) => {
-    res.cookie( "refToken", refToken, {
-        httpOnly: true,
-        secure:  process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 24*60*60*1000,
-        path: "/api/auth/refToken"
-    })
-}
+  res.cookie("refToken", refToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 24 * 60 * 60 * 1000,
+    path: "/api/user/auth",
+  });
+};
 
-export const clearRefToken = ( res: Response) => {
-    res.clearCookie("refToken");
-} 
-
-
+export const clearRefToken = (res: Response) => {
+  res.clearCookie("refToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 24 * 60 * 60 * 1000,
+    path: "/api/user/auth",
+  });
+};

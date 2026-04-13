@@ -1,17 +1,11 @@
 import  { Schema, model, Types } from "mongoose";
-
-interface IRefreshToken  { 
-  user:Types.ObjectId | string,
-  refreshToken: string; 
-  expiresAt: Date;
-}
-
-
+import { IRefreshToken } from "../types/Token.js";
 
 const RefreshTokenSchema = new Schema<IRefreshToken>({ 
   user: {
     type:  Schema.Types.ObjectId,
     ref: "User",
+    unique: true,
     index: true        
   },
   refreshToken: { type: String, required: true, unique: true, index: true },  

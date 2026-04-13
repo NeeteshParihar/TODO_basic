@@ -1,5 +1,5 @@
 import RefreshToken from "../models/refreshtokens.js";
-import { IRefreshToken } from "../types/Token.js";
+import {   IRefreshToken } from "../types/Token.js";
 import { getRefreshTokenHash } from "../utils/bcyrpt.js";
 
 const getMaxAge = () => {
@@ -17,23 +17,33 @@ interface IRefreshToken  {
 export const createRefreshToken = async ({
   userId,
   refreshToken,
-  expiresAt,
 }: IRefreshToken) => {
   // hashtemp
 
-  const hashCode = await getRefreshTokenHash(refreshToken);
+  const hashCode = getRefreshTokenHash(refreshToken);
 
   await RefreshToken.create({
     user: userId,
     refreshToken: hashCode,
     expiresAt: getMaxAge(),
   });
+
 };
 
-export const deleteRefreshToken = async ( refreshToken: string) => {
-  await RefreshToken.deleteOne({ refreshToken });
+export const deleteRefreshToken = async (refreshToken: string) => {
+  const hashCode =  getRefreshTokenHash(refreshToken);
+   await RefreshToken.deleteOne({ refreshToken: hashCode });
+
+};
+
+export const getRefreshToken = async (refreshToken: string): Promise<IRefreshToken | null > => {
+   const hashCode =  getRefreshTokenHash(refreshToken);
+  return await RefreshToken.findOne({ refreshToken:hashCode });
+};
+
+export const revokeAllRefreshTokens = async ( userId: string) => {
+  await RefreshToken.deleteMany({ user: userId });
 }
 
-export const getRefreshToken = async (refreshToken: string  ) => {
-  await RefreshToken.findOne({ refreshToken });
-}
+//  $2b$10$UjrEWcxh3XHIhPR3jfXqAuP3Cy/GEAJanO.yqT.l0KU/4n.vgOuze
+// $2b$10$1MAohxkJwZVyfuSC8CfbzOuSOfTpd0YL58NJpB5ocTO7Z7vSkwBeG

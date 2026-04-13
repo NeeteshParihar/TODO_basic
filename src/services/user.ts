@@ -11,11 +11,20 @@ export const checkUserInDb = async (email: string) => {
     return isExists; 
 };
 
-export const createUser = async ( username: string, email: string, password: string) => {
+
+interface IUser {
+    _id: string
+    username: string
+    email: string
+    password: string
+}
+
+export const createUser = async ( {_id, username, email, password}:IUser ) => {
 
     const hashCode = await hashPassword(password);
 
     const newUser = await User.create({
+        _id,
         username,
         email,
         password: hashCode
