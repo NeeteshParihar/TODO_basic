@@ -1,5 +1,5 @@
 import { type Request, type Response } from "express";
-import { generateJwt, setCookie, clearJwt } from "../utils/Jwt.js";
+import { generateJwt, setCookie, clearJwt, generateRefToken, setRefToken } from "../utils/Jwt.js";
 import { comparePassword } from "../utils/bcyrpt.js";
 import {
   checkUserInDb,
@@ -8,14 +8,14 @@ import {
   deleteUserFromDB,
 } from "../services/user.js";
 
+
+
+
 export const signUp = async (req: Request, res: Response) => {
   try {
-
   
     const { username, email, password } = req.body;  
-
     const isExists = await checkUserInDb(email);
-
 
     if (isExists)
       return res.status(400).json({
@@ -24,8 +24,14 @@ export const signUp = async (req: Request, res: Response) => {
       });
 
     const newUser = await createUser(username, email, password);
+
     const jwtToken = generateJwt({ userId: String(newUser._id) });
     setCookie(jwtToken, res);
+
+    const refToken = generateRefToken({ userId: String(newUser._id) });
+    setRefToken(refToken,res);
+
+    await createRefreshTokenInDb( String(newUser._id) ,refToken );
 
     res.status(201).json({
       success: true,
