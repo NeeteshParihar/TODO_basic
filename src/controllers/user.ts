@@ -7,6 +7,7 @@ import {
   clearJwt,
   generateRefToken,
   setRefToken,
+  decodeRefToken,
   clearRefToken,
 } from "../utils/Jwt.js";
 import { comparePassword } from "../utils/bcyrpt.js";
@@ -24,7 +25,6 @@ import {
   getRefreshToken,
 } from "../services/token.js";
 
-import { decode } from "../utils/Jwt.js";
 
 import { blockJWT } from "../services/redis.js";
 import { IRefreshToken } from "../types/Token.js";
@@ -131,6 +131,9 @@ export const logout = async (req: Request, res: Response) => {
 
     const { refToken, jwtToken } = req.cookies;
 
+    if (!refToken || !jwtToken) return res.status(400).json({ success: false, message: "Please login Again!" });
+
+
     await blockJWT(jwtToken);
     await deleteRefreshToken(refToken);
 
@@ -154,14 +157,14 @@ export const refreshTheToken = async (req: Request, res: Response) => {
   try {
 
     const { refToken } = req.cookies;
-    const payload = decode(refToken);
+    const payload = decodeRefToken(refToken);
 
-    if (!refToken) 
+    if (!refToken)
       return res
         .status(400)
         .json({ success: false, message: "Please login Again!" });
 
-    if (!payload) { 
+    if (!payload) {
       await deleteRefreshToken(refToken);
       return res
         .status(400)
@@ -170,7 +173,12 @@ export const refreshTheToken = async (req: Request, res: Response) => {
 
     // if refresh Token is valid --> maybe the used is got deleted so we have to check in db
 
-    const token = await getRefreshToken(refToken) ;  
+    console.log(payload);
+
+
+    const token = await getRefreshToken(refToken);
+
+    console.log(token);
 
     if (!token || !token.expiresAt || token.expiresAt < new Date()) {
 
@@ -184,10 +192,10 @@ export const refreshTheToken = async (req: Request, res: Response) => {
     // if the user have the token and also a valid token then give the access tokens
 
     const jwtToken = generateJwt({ userId: payload.userId });
-    setCookie( jwtToken,  res );
-    res.status(200).json({  success: true, message: "Refreshed successfully!"});
+    setCookie(jwtToken, res);
+    res.status(200).json({ success: true, message: "Refreshed successfully!" });
 
-  } catch (err) {}
+  } catch (err) { }
 };
 
 export const getUserPrfile = async (req: Request, res: Response) => {

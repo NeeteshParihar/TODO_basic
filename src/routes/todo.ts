@@ -11,7 +11,11 @@ import { validateData } from "../middleware/dataValidation.js";
 import { TodoSchema, TodoUpdateSchema, TodoGetSchema } from "../dataValidation/todo.js";
 
 
+import { rateLimiter } from "../middleware/rateLimiter.js";
+
 const router = Router();
+
+router.use(rateLimiter("todos"));
 
 router.post("/", validateJwt, validateData(TodoSchema), createTodo);
 router.get("/", validateJwt, validateData(TodoGetSchema, "query"), getTodos);

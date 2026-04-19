@@ -3,6 +3,8 @@ import { Response } from "express";
 
 interface IPayload {
   userId: string;
+  iat: number;
+  exp: number;
 }
 
 const SECRET = process.env.SECRET_KEY as string;
@@ -47,6 +49,15 @@ export const generateRefToken = (Payload: { userId: string }): string => {
     expiresIn: "1d",
   });
   return refToken;
+};
+
+export const decodeRefToken = (token: string): IPayload | null => {
+  try {
+    const payload = jwt.verify(token, REFRESH_SECRET);
+    return payload as  IPayload ;
+  } catch (error) {
+    return null;
+  }
 };
 
 export const setRefToken = (refToken: string, res: Response) => {
