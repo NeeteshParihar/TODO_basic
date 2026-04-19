@@ -2,7 +2,7 @@ import  { Schema, model, Types } from "mongoose";
 import { IRefreshToken } from "../types/Token.js";
 
 const RefreshTokenSchema = new Schema<IRefreshToken>({ 
-  user: {
+  userId: {
     type:  Schema.Types.ObjectId,
     ref: "User",
     unique: true,

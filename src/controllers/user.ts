@@ -26,6 +26,9 @@ import {
 
 import { decode } from "../utils/Jwt.js";
 
+import { blockJWT } from "../services/redis.js";
+import { IRefreshToken } from "../types/Token.js";
+
 export const signUp = async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body;
@@ -126,8 +129,9 @@ export const logout = async (req: Request, res: Response) => {
     // block the accesToken
     // revoke/ delete the refreshToken
 
-    const { refToken } = req.cookies;
+    const { refToken, jwtToken } = req.cookies;
 
+    await blockJWT(jwtToken);
     await deleteRefreshToken(refToken);
 
     clearJwt(res);
@@ -152,12 +156,12 @@ export const refreshTheToken = async (req: Request, res: Response) => {
     const { refToken } = req.cookies;
     const payload = decode(refToken);
 
-    if (!refToken)
+    if (!refToken) 
       return res
         .status(400)
         .json({ success: false, message: "Please login Again!" });
 
-    if (!payload) {
+    if (!payload) { 
       await deleteRefreshToken(refToken);
       return res
         .status(400)
@@ -166,9 +170,9 @@ export const refreshTheToken = async (req: Request, res: Response) => {
 
     // if refresh Token is valid --> maybe the used is got deleted so we have to check in db
 
-    const token = await getRefreshToken(refToken);  
+    const token = await getRefreshToken(refToken) ;  
 
-    if (!token || token.expiresAt < new Date()) {
+    if (!token || !token.expiresAt || token.expiresAt < new Date()) {
 
       if (token) await deleteRefreshToken(refToken);
 
@@ -218,7 +222,10 @@ export const deleteUser = async (req: Request, res: Response) => {
     // implement middleware and token blocking mechanism
     const userId = String(req.user!.userId);
 
+    const { jwtToken } = req.cookies;
+    await blockJWT(jwtToken);
     await revokeAllRefreshTokens(userId);
+
     const deletedUser = await deleteUserFromDB(userId);
     if (!deletedUser)
       res.status(404).json({

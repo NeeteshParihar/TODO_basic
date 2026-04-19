@@ -23,11 +23,10 @@ export const createRefreshToken = async ({
   const hashCode = getRefreshTokenHash(refreshToken);
 
   await RefreshToken.create({
-    user: userId,
+    userId: userId,
     refreshToken: hashCode,
     expiresAt: getMaxAge(),
   });
-
 };
 
 export const deleteRefreshToken = async (refreshToken: string) => {
@@ -42,7 +41,7 @@ export const getRefreshToken = async (refreshToken: string): Promise<IRefreshTok
 };
 
 export const revokeAllRefreshTokens = async ( userId: string) => {
-  await RefreshToken.deleteMany({ user: userId });
+  await RefreshToken.deleteMany({ userId: userId });
 }
 
 //  $2b$10$UjrEWcxh3XHIhPR3jfXqAuP3Cy/GEAJanO.yqT.l0KU/4n.vgOuze
