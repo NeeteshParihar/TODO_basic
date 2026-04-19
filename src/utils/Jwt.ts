@@ -6,6 +6,7 @@ interface IPayload {
 }
 
 const SECRET = process.env.SECRET_KEY as string;
+const REFRESH_SECRET = process.env.REFRESH_TOKEN_SECRET as string; 
 const time = (process.env.JWT_EXPIRY || "15m") as any;
 
 export const generateJwt = (payload: IPayload): string => {
@@ -42,7 +43,7 @@ export const setCookie = (token: string, res: Response) => {
 };
 
 export const generateRefToken = (Payload: { userId: string }): string => {
-  const refToken = jwt.sign(Payload, SECRET, {
+  const refToken = jwt.sign(Payload, REFRESH_SECRET, {
     expiresIn: "1d",
   });
   return refToken;
