@@ -7,9 +7,27 @@ import userRouter from "./routes/user.js";
 import todoRouter from "./routes/todo.js";
 import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
+import cors from "cors";
+
 
 const port: number = Number(process.env["PORT"]) || 3000;
 const app = express();
+
+const allowedOrigins = ["http://localhost:5173"];
+
+// add the cors configurations
+app.use(cors({
+  origin: (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => {
+    // if origin is undefined, it's a server-to-server request (like from a proxy)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+}));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
