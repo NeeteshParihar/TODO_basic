@@ -80,7 +80,7 @@ interface IQuery {
   endDate: Date
   cursor: string | null
   limit: number
-  isCompleted: boolean
+  isCompleted: Boolean
 }
 
 
@@ -94,7 +94,7 @@ export const getTodoByDateRange = async ({
 }: IQuery) => {
 
   const query = {
-    isCompleted,
+    isCompleted:isCompleted,
     user: userId,
     date: {
       $gte: startDate,

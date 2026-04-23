@@ -5,6 +5,7 @@ import {
   deleteTodoInDb,
   getTodosInDb,
   updateTodoInDb,
+  getTodoByDateRange
 } from "../services/Todo.js";
 
 export const createTodo = async (req: Request, res: Response) => {
@@ -100,7 +101,7 @@ export const getTodos = async (req: Request, res: Response) => {
 export const updateTodo = async (req: Request, res: Response) => {
   try {
 
-   
+
     let todoId = req.params.id as string;
 
     const { title, date, isCompleted } = req.body;
@@ -113,7 +114,7 @@ export const updateTodo = async (req: Request, res: Response) => {
 
 
 
-    const updatedTodo = await updateTodoInDb({      
+    const updatedTodo = await updateTodoInDb({
       todoId,
       title,
       date,
@@ -121,7 +122,7 @@ export const updateTodo = async (req: Request, res: Response) => {
     });
 
     if (!updatedTodo)
-     return res.status(404).json({
+      return res.status(404).json({
         success: false,
         message: "Todo not found!",
       });
@@ -152,18 +153,22 @@ export const updateTodo = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getTodosByDateRange = async (req: Request, res: Response) => {
 
-  try{
+  try {
+
     const userId = String(req.user!.userId);
-    const {cursor, limit, isCompleted} = req.query; 
+    const { cursor, limit, isCompleted } = req.query;
     const { startDate, endDate } = req.query;
-    
-    const { todos, hasNextPage, nextCursor } = await getTodosInDb(
-      cursor as string | null,
-      limit,
-      userId,
+
+    const { todos, hasNextPage, nextCursor } = await getTodoByDateRange({
+      cursor: cursor as string | null,
+      limit: Number(limit) || 15,
+      userId: userId,
+      startDate: startDate as any as Date,
+      endDate: endDate as any as Date,
+      isCompleted: isCompleted as any as Boolean
+    }
     );
 
     res.status(200).json({
@@ -175,8 +180,14 @@ export const getTodosByDateRange = async (req: Request, res: Response) => {
       },
     });
 
-  }catch(err){
+  } catch (err) {
 
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: (err as Error).message,
+    });
   }
 }
+
 
