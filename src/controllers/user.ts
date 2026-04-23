@@ -32,6 +32,7 @@ import { IRefreshToken } from "../types/Token.js";
 export const signUp = async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body;
+
     const isExists = await checkUserInDb(email);
 
     if (isExists)
@@ -43,9 +44,10 @@ export const signUp = async (req: Request, res: Response) => {
     const userId = String(new Types.ObjectId());
     const jwtToken = generateJwt({ userId: userId });
     const refToken = generateRefToken({ userId: userId });
-
+    
     await createRefreshToken({ userId: userId, refreshToken: refToken });
 
+  
     const newUser = await createUser({
       _id: userId,
       username,
@@ -68,6 +70,8 @@ export const signUp = async (req: Request, res: Response) => {
       },
     });
   } catch (err) {
+
+
     res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -157,7 +161,7 @@ export const refreshTheToken = async (req: Request, res: Response) => {
   try {
 
     const { refToken } = req.cookies;
-    const payload = decodeRefToken(refToken);
+    const payload = decodeRefToken(refToken);  
 
     if (!refToken)
       return res
@@ -170,15 +174,11 @@ export const refreshTheToken = async (req: Request, res: Response) => {
         .status(400)
         .json({ success: false, message: "Please login Again!" });
     }
+ 
 
-    // if refresh Token is valid --> maybe the used is got deleted so we have to check in db
-
-    console.log(payload);
-
-
+  
     const token = await getRefreshToken(refToken);
 
-    console.log(token);
 
     if (!token || !token.expiresAt || token.expiresAt < new Date()) {
 
@@ -189,18 +189,30 @@ export const refreshTheToken = async (req: Request, res: Response) => {
         .json({ success: false, message: "Please login Again!" });
     }
 
+
+    console.log("request arrived");
+    console.log(refToken);
+    console.log("--------------------------------------")
+
     // if the user have the token and also a valid token then give the access tokens
 
     const jwtToken = generateJwt({ userId: payload.userId });
     setCookie(jwtToken, res);
-    res.status(200).json({ success: true, message: "Refreshed successfully!" });
+    res.status(200).json({ success: true, message: "Refreshed successfully!", userId: payload.userId });
 
-  } catch (err) { }
+  } catch (err) {
+    console.log(err)
+    res.status(500).json({
+      success:false,
+      message:"Internal server error"
+    })
+   }
 };
 
 export const getUserPrfile = async (req: Request, res: Response) => {
   try {
     // implement middleware to verify the user
+    console.log(req.user);
     const userId = String(req.user!.userId);
     const user = await getUser(userId, ["username", "email", "avatar", "dob"]);
     if (!user)

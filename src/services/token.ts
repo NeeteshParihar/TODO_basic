@@ -27,6 +27,7 @@ export const createRefreshToken = async ({
     refreshToken: hashCode,
     expiresAt: getMaxAge(),
   });
+  
 };
 
 export const deleteRefreshToken = async (refreshToken: string) => {

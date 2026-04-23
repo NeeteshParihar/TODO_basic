@@ -31,8 +31,9 @@ export const getTodosInDb = async (
   }
 
   const todos = await Todo.find(query)
+    .sort({ date: -1 })
     .limit(limit + 1)
-    .sort({ date: -1 }); // sort
+    .lean(); // sort
 
   const hasNextPage = todos.length > limit;
   const result = todos.slice(0, limit);
@@ -71,3 +72,47 @@ export const updateTodoInDb = async ({
   );
   return updatedTodo;
 };
+
+
+interface IQuery {
+  userId: string
+  startDate: Date
+  endDate: Date
+  cursor: string | null
+  limit: number
+  isCompleted: boolean
+}
+
+
+export const getTodoByDateRange = async ({  
+  userId,
+  startDate,
+  endDate,
+  cursor,
+  limit = 15,
+  isCompleted = false
+}: IQuery) => {
+
+  const query = {
+    isCompleted,
+    user: userId,
+    date: {
+      $gte: startDate,
+      $lte: cursor? cursor: endDate,
+    },  
+  }
+ 
+  const todos = await Todo.find(query).sort({ date: -1 }).limit(limit + 1).lean();
+
+  const response = todos.slice(0, limit);
+  const hasNextPage = todos.length > limit;
+  const nextCursor = hasNextPage ? response[response.length - 1].date : null;
+
+  return {
+    todos: response,
+    hasNextPage,
+    nextCursor,
+  }; 
+  
+
+}

@@ -3,8 +3,8 @@ import { Response } from "express";
 
 interface IPayload {
   userId: string;
-  iat: number;
-  exp: number;
+  iat?: number;
+  exp?: number;
 }
 
 const SECRET = process.env.SECRET_KEY as string;

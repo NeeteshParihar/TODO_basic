@@ -152,3 +152,31 @@ export const updateTodo = async (req: Request, res: Response) => {
   }
 };
 
+
+export const getTodosByDateRange = async (req: Request, res: Response) => {
+
+  try{
+    const userId = String(req.user!.userId);
+    const {cursor, limit, isCompleted} = req.query; 
+    const { startDate, endDate } = req.query;
+    
+    const { todos, hasNextPage, nextCursor } = await getTodosInDb(
+      cursor as string | null,
+      limit,
+      userId,
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        todos,
+        hasNextPage,
+        nextCursor,
+      },
+    });
+
+  }catch(err){
+
+  }
+}
+
