@@ -161,24 +161,23 @@ export const refreshTheToken = async (req: Request, res: Response) => {
   try {
 
     const { refToken } = req.cookies;
-    const payload = decodeRefToken(refToken);  
+    const payload = decodeRefToken(refToken); 
 
     if (!refToken)
       return res
         .status(400)
         .json({ success: false, message: "Please login Again!" });
-
-    if (!payload) {
-      await deleteRefreshToken(refToken);
+    
+        //  the refresh token is invalid
+    if (!payload) { 
+      await deleteRefreshToken(refToken); 
       return res
         .status(400)
         .json({ success: false, message: "Please login Again!" });
     }
- 
-
-  
+    
+    // find the refresh token record in database
     const token = await getRefreshToken(refToken);
-
 
     if (!token || !token.expiresAt || token.expiresAt < new Date()) {
 
@@ -188,7 +187,6 @@ export const refreshTheToken = async (req: Request, res: Response) => {
         .status(400)
         .json({ success: false, message: "Please login Again!" });
     }
-
 
     console.log("request arrived");
     console.log(refToken);

@@ -20,14 +20,15 @@ export const createRefreshToken = async ({
 }: IRefreshToken) => {
   // hashtemp
 
-  const hashCode = getRefreshTokenHash(refreshToken);
-
+  const hashCode = getRefreshTokenHash(refreshToken);  
+  await RefreshToken.deleteOne({ userId: userId }); 
   await RefreshToken.create({
     userId: userId,
     refreshToken: hashCode,
     expiresAt: getMaxAge(),
-  });
-  
+  }); 
+
+
 };
 
 export const deleteRefreshToken = async (refreshToken: string) => {

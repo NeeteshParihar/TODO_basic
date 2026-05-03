@@ -76,10 +76,10 @@ export const updateTodoInDb = async ({
 
 interface IQuery {
   userId: string
-  startDate: Date
-  endDate: Date
-  cursor: string | null
-  limit: number
+  startDate: string | Date | undefined
+  endDate: string | Date | undefined
+  cursor: string | null | undefined
+  limit: number 
   isCompleted: Boolean
 }
 
@@ -93,15 +93,19 @@ export const getTodoByDateRange = async ({
   isCompleted = false
 }: IQuery) => {
 
+
+  const dateFilter: { $gte?: Date; $lte?: Date; $lt?: string } = {};
+  if( startDate ) dateFilter.$gte = new Date(startDate) as Date;
+  if( cursor ) dateFilter.$lt = cursor; 
+  else if( endDate ) dateFilter.$lte = new Date(endDate) as Date;
+
   const query = {
     isCompleted:isCompleted,
     user: userId,
-    date: {
-      $gte: startDate,
-      $lte: cursor? cursor: endDate,
-    },  
+    date: dateFilter
   }
  
+  
   const todos = await Todo.find(query).sort({ date: -1 }).limit(limit + 1).lean();
 
   const response = todos.slice(0, limit);
