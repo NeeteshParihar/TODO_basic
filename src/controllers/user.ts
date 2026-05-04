@@ -1,5 +1,6 @@
 import { type Request, type Response } from "express";
 import { Types } from "mongoose";
+import { RESCODE } from "../utils/constants.js";
 
 import {
   generateJwt,
@@ -44,10 +45,10 @@ export const signUp = async (req: Request, res: Response) => {
     const userId = String(new Types.ObjectId());
     const jwtToken = generateJwt({ userId: userId });
     const refToken = generateRefToken({ userId: userId });
-    
+
     await createRefreshToken({ userId: userId, refreshToken: refToken });
 
-  
+
     const newUser = await createUser({
       _id: userId,
       username,
@@ -161,36 +162,22 @@ export const refreshTheToken = async (req: Request, res: Response) => {
   try {
 
     const { refToken } = req.cookies;
-    const payload = decodeRefToken(refToken); 
+    const payload = decodeRefToken(refToken);
 
-    if (!refToken)
+    // if reftoken is not given or if reftoken is not valid : in that case payload will be undefined
+    if (!refToken || !payload )
       return res
         .status(400)
-        .json({ success: false, message: "Please login Again!" });
-    
-        //  the refresh token is invalid
-    if (!payload) { 
-      await deleteRefreshToken(refToken); 
-      return res
-        .status(400)
-        .json({ success: false, message: "Please login Again!" });
-    }
-    
+        .json({ success: false, message: "Please login Again!", refreshTokenInvalid: RESCODE.refreshTokenInvalid });   
+
     // find the refresh token record in database
     const token = await getRefreshToken(refToken);
 
     if (!token || !token.expiresAt || token.expiresAt < new Date()) {
-
-      if (token) await deleteRefreshToken(refToken);
-
       return res
         .status(400)
-        .json({ success: false, message: "Please login Again!" });
-    }
-
-    console.log("request arrived");
-    console.log(refToken);
-    console.log("--------------------------------------")
+        .json({ success: false, message: "Please login Again!",  refreshTokenInvalid: RESCODE.refreshTokenInvalid });
+    }  
 
     // if the user have the token and also a valid token then give the access tokens
 
@@ -201,10 +188,10 @@ export const refreshTheToken = async (req: Request, res: Response) => {
   } catch (err) {
     console.log(err)
     res.status(500).json({
-      success:false,
-      message:"Internal server error"
+      success: false,
+      message: "Internal server error"
     })
-   }
+  }
 };
 
 export const getUserPrfile = async (req: Request, res: Response) => {

@@ -54,7 +54,6 @@ The improvements are categorized by priority and impact.
 > **My recommendation:** We should start by implementing **Centralized Error Handling** and **CORS/Helmet**, as these will immediately clean up your codebase and secure your application for frontend integration.
 
 
-
 ```text
 1. Improve the auth logic: edgeCase: when user refreshToken expires the frontend makes the request but can't refresh it so it tries to login but due to duplicate record error the login is failing so imporve htis
 ```
