@@ -26,18 +26,18 @@ export const TodoGetSchema = z.object({
 
 
 export const TodoGetByDateRangeSchema = z.object({
-    limit: z.coerce.number().min(1).max(30).optional(),
+    limit: z.coerce.number().min(1).max(20).optional(),
     cursor: z.coerce.date().optional(),
     isCompleted: z.coerce.boolean().optional(),
-    startDate: z.coerce.date(),
-    endDate: z.coerce.date()
-}).refine((data) => {
-    if (data.limit && data.limit > 30) return false;
-    if (data.cursor && (data.cursor > data.endDate || data.cursor < data.startDate)) return false;
-    if (data.startDate > data.endDate) return false;
+    startDate: z.coerce.date().optional(),
+    endDate: z.coerce.date().optional()
+}).refine((data) => {   
+    if (data.cursor && data.startDate && data.cursor < data.startDate) return false;
+    if (data.startDate && data.endDate && data.startDate > data.endDate) return false;
     return true;
 }, {
-    message: "Invalid get request!",
+    message: "Invalid get request!", 
+    
 })
 
 /* 

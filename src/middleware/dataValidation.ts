@@ -16,6 +16,8 @@ export const validateData = (schema: z.ZodObject<any, any>, type: DataType = "bo
 
       next();
     } catch (err) {
+
+      // if its zod error
       if (err instanceof ZodError) {
         const message = err.issues
           .map((issue) => `${issue.path.join(".")}: ${issue.message}`)

@@ -18,7 +18,7 @@ export const isUserAllowed = async (userId: string, endpoint: string): Promise<b
   // if the key exists it returns 1 else  0
   const exists = await client.exists(key);
 
-  if (!exists) {
+  if (!exists) {652
 
     const replies = await client.multi()
       .incr(key)
@@ -27,6 +27,7 @@ export const isUserAllowed = async (userId: string, endpoint: string): Promise<b
 
     const count = replies[0] as unknown as number;
     return count <= maxRateLimit;
+
   } else {
     // For subsequent requests, just increment the count
     const count = await client.incr(key);

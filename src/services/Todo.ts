@@ -67,7 +67,7 @@ export const updateTodoInDb = async ({
     todoId,
     { $set: updates },
     {
-      new: true,runValidators: true
+      new: true, runValidators: true
     },
   );
   return updatedTodo;
@@ -79,12 +79,12 @@ interface IQuery {
   startDate: string | Date | undefined
   endDate: string | Date | undefined
   cursor: string | null | undefined
-  limit: number 
+  limit: number
   isCompleted: Boolean
 }
 
 
-export const getTodoByDateRange = async ({  
+export const getTodoByDateRange = async ({
   userId,
   startDate,
   endDate,
@@ -95,18 +95,18 @@ export const getTodoByDateRange = async ({
 
 
   const dateFilter: { $gte?: Date; $lte?: Date; $lt?: string } = {};
-  if( startDate ) dateFilter.$gte = new Date(startDate) as Date;
-  if( cursor ) dateFilter.$lt = cursor; 
-  else if( endDate ) dateFilter.$lte = new Date(endDate) as Date;
+  if (startDate) dateFilter.$gte = new Date(startDate) as Date;
+  if (cursor) dateFilter.$lt = cursor;
+  else if (endDate) dateFilter.$lte = new Date(endDate) as Date;
 
-  const query = {
-    isCompleted:isCompleted,
+  const query: { isCompleted: Boolean | undefined, user: string, date?: object | undefined } = {
+    isCompleted: isCompleted,
     user: userId,
-    date: dateFilter
   }
- 
-  
+
+  if (Object.keys(dateFilter).length !== 0) query.date = dateFilter;
   const todos = await Todo.find(query).sort({ date: -1 }).limit(limit + 1).lean();
+
 
   const response = todos.slice(0, limit);
   const hasNextPage = todos.length > limit;
@@ -116,7 +116,7 @@ export const getTodoByDateRange = async ({
     todos: response,
     hasNextPage,
     nextCursor,
-  }; 
-  
+  };
+
 
 }
