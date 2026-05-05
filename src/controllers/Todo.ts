@@ -1,5 +1,5 @@
 import { type Response, type Request } from "express";
-import { Types, Schema } from "mongoose";
+import { Types } from "mongoose";
 import {
   createTodoInDb,
   deleteTodoInDb,
@@ -10,7 +10,7 @@ import {
 
 export const createTodo = async (req: Request, res: Response) => {
   try {
-    const { title, date } = req.body;
+    const { title, date } = res.locals.validatedBody;
     const userId = String(req.user!.userId);
     const newTodo = await createTodoInDb(title, date, userId);
 
@@ -66,18 +66,12 @@ export const deleteTodo = async (req: Request, res: Response) => {
 export const getTodos = async (req: Request, res: Response) => {
   try {
     const userId = String(req.user!.userId);
-    let { limit = 10 } = req.query;
-    limit = Number(limit);
-
-    let cursor: unknown = req.query.cursor;
-
-    if (Array.isArray(cursor) && typeof cursor[0] === "string") {
-      cursor = cursor[0];
-    } else if (!cursor) cursor = null;
+    // Use sanitized & coerced data from res.locals (limit is already a number, cursor is already typed)
+    const { limit = 10, cursor = null } = res.locals.validatedQuery;
 
     const { todos, hasNextPage, nextCursor } = await getTodosInDb(
       cursor as string | null,
-      limit,
+      limit as number,
       userId,
     );
 
@@ -100,19 +94,14 @@ export const getTodos = async (req: Request, res: Response) => {
 
 export const updateTodo = async (req: Request, res: Response) => {
   try {
-
-
     let todoId = req.params.id as string;
-
-    const { title, date, isCompleted } = req.body;
+    const { title, date, isCompleted } = res.locals.validatedBody;
 
     if (!todoId)
       return res.status(400).json({
         success: false,
         message: "Bad request!",
       });
-
-
 
     const updatedTodo = await updateTodoInDb({
       todoId,
@@ -135,7 +124,6 @@ export const updateTodo = async (req: Request, res: Response) => {
       },
     });
 
-
   } catch (err: any) {
     if (err.code === 11000) {
       return res.status(400).json({
@@ -156,20 +144,18 @@ export const updateTodo = async (req: Request, res: Response) => {
 export const getTodosByDateRange = async (req: Request, res: Response) => {
 
   try {
-
     const userId = String(req.user!.userId);
-    const { cursor, limit, isCompleted } = req.query;
-    const { startDate, endDate } = req.query;
+    // All values are already sanitized and coerced by Zod via res.locals
+    const { cursor, limit = 15, isCompleted, startDate, endDate } = res.locals.validatedQuery;
 
     const { todos, hasNextPage, nextCursor } = await getTodoByDateRange({
-      cursor: cursor as string | null,
-      limit: Number(limit) || 15,
+      cursor: cursor ?? null,
+      limit: limit as number,
       userId: userId,
-      startDate: startDate as any as Date,
-      endDate: endDate as any as Date,
-      isCompleted: isCompleted as any as Boolean
-    }
-    );
+      startDate: startDate as Date | undefined,
+      endDate: endDate as Date | undefined,
+      isCompleted: isCompleted as Boolean
+    });
 
     res.status(200).json({
       success: true,
@@ -188,5 +174,4 @@ export const getTodosByDateRange = async (req: Request, res: Response) => {
       error: (err as Error).message,
     });
   }
-}
-
+};

@@ -32,7 +32,7 @@ import { IRefreshToken } from "../types/Token.js";
 
 export const signUp = async (req: Request, res: Response) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password } = res.locals.validatedBody;
 
     const isExists = await checkUserInDb(email);
 
@@ -83,7 +83,7 @@ export const signUp = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = res.locals.validatedBody;
     const user = await getUser(email, ["username", "email", "password"]);
 
     if (!user || !(await comparePassword(password, user.password)))

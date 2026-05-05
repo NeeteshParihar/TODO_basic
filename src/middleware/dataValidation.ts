@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { success, z, ZodError } from "zod";
+import { z, ZodError } from "zod";
 
 type DataType = "body" | "query" | "param";
 
@@ -7,11 +7,11 @@ export const validateData = (schema: z.ZodObject<any, any>, type: DataType = "bo
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       if (type === "body") {
-        req.body = schema.parse(req.body);
-      }else if( type === "query"){
-         schema.parse(req.query)        
-      }else{
-        schema.parse(req.params)
+        res.locals.validatedBody = schema.parse(req.body);
+      } else if (type === "query") {
+        res.locals.validatedQuery = schema.parse(req.query);
+      } else {
+        res.locals.validatedParams = schema.parse(req.params);
       }
 
       next();
@@ -36,5 +36,3 @@ export const validateData = (schema: z.ZodObject<any, any>, type: DataType = "bo
     }
   };
 };
-
-
