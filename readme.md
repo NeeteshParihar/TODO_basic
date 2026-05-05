@@ -57,3 +57,330 @@ The improvements are categorized by priority and impact.
 ```text
 1. Improve the auth logic: edgeCase: when user refreshToken expires the frontend makes the request but can't refresh it so it tries to login but due to duplicate record error the login is failing so imporve htis
 ```
+
+---
+
+# API Documentation
+
+> **Base URL:** `http://localhost:3000`  
+> **Authentication:** All protected routes require a valid JWT sent automatically via an HTTP-only cookie (`jwtToken`).  
+> All request/response bodies use `Content-Type: application/json`.
+
+---
+
+## 🔐 User Routes — `/api/user`
+
+Rate-limited per IP.
+
+---
+
+### `POST /api/user/auth/signup`
+
+Register a new user account.
+
+**Auth required:** ❌ No
+
+**Request Body:**
+| Field | Type | Rules |
+|---|---|---|
+| `username` | `string` | min 3 characters |
+| `email` | `string` | valid email format, lowercased |
+| `password` | `string` | min 8 characters |
+
+**Success Response `201`:**
+```json
+{
+  "success": true,
+  "message": "User created successfully",
+  "data": {
+    "user": {
+      "_id": "<userId>",
+      "username": "neetesh",
+      "email": "neetesh@example.com"
+    }
+  }
+}
+```
+
+**Sets cookies:** `jwtToken` (access token), `refToken` (refresh token)
+
+---
+
+### `POST /api/user/auth/login`
+
+Log in with existing credentials.
+
+**Auth required:** ❌ No
+
+**Request Body:**
+| Field | Type | Rules |
+|---|---|---|
+| `email` | `string` | valid email, lowercased |
+| `password` | `string` | min 8 characters |
+
+**Success Response `200`:**
+```json
+{
+  "success": true,
+  "message": "User logged in successfully",
+  "data": {
+    "user": {
+      "username": "neetesh",
+      "email": "neetesh@example.com"
+    }
+  }
+}
+```
+
+**Sets cookies:** `jwtToken`, `refToken`
+
+---
+
+### `POST /api/user/auth/logout`
+
+Log out the current user. Blocks the active JWT and deletes the refresh token from the DB.
+
+**Auth required:** ✅ Yes
+
+**Request Body:** None
+
+**Success Response `200`:**
+```json
+{
+  "success": true,
+  "message": "User logged out successfully"
+}
+```
+
+**Clears cookies:** `jwtToken`, `refToken`
+
+---
+
+### `POST /api/user/auth/refreshToken`
+
+Issue a new access token using the refresh token cookie. Call this when the frontend receives a `401` from any protected route.
+
+**Auth required:** ❌ No (uses `refToken` cookie)
+
+**Request Body:** None
+
+**Success Response `200`:**
+```json
+{
+  "success": true,
+  "message": "Refreshed successfully!",
+  "userId": "<userId>"
+}
+```
+
+**Sets cookie:** `jwtToken` (new access token)
+
+---
+
+### `GET /api/user/profile`
+
+Fetch the authenticated user's profile.
+
+**Auth required:** ✅ Yes
+
+**Success Response `200`:**
+```json
+{
+  "success": true,
+  "message": "User profile fetched successfully",
+  "data": {
+    "user": {
+      "username": "neetesh",
+      "email": "neetesh@example.com",
+      "avatar": "...",
+      "dob": "..."
+    }
+  }
+}
+```
+
+---
+
+### `DELETE /api/user/`
+
+Permanently delete the authenticated user's account. Also blocks the current JWT and revokes all refresh tokens.
+
+**Auth required:** ✅ Yes
+
+**Success Response `200`:**
+```json
+{
+  "success": true,
+  "message": "User deleted successfully"
+}
+```
+
+---
+
+## ✅ Todo Routes — `/api/todo`
+
+Rate-limited per IP. All routes require authentication.
+
+---
+
+### `POST /api/todo/`
+
+Create a new todo.
+
+**Auth required:** ✅ Yes
+
+**Request Body:**
+| Field | Type | Rules |
+|---|---|---|
+| `title` | `string` | min 3 characters |
+| `date` | `string` / `Date` | any valid date string, auto-coerced to `Date` |
+| `isCompleted` | `boolean` | optional, defaults to `false` |
+
+**Success Response `201`:**
+```json
+{
+  "success": true,
+  "message": "Todo created successfully!",
+  "data": {
+    "todo": { ... }
+  }
+}
+```
+
+**Error `400` (duplicate date):**
+```json
+{ "success": false, "message": "Please choose a different date", "errorCode": 11000 }
+```
+
+---
+
+### `GET /api/todo/`
+
+Fetch todos for the authenticated user with cursor-based pagination.
+
+**Auth required:** ✅ Yes
+
+**Query Parameters:**
+| Param | Type | Rules | Default |
+|---|---|---|---|
+| `limit` | `number` | min 1, optional | `10` |
+| `cursor` | `Date string` | ISO date string, optional — the `date` of the last item from the previous page | — |
+
+**Success Response `200`:**
+```json
+{
+  "success": true,
+  "data": {
+    "todos": [ ... ],
+    "hasNextPage": true,
+    "nextCursor": "2024-01-15T00:00:00.000Z"
+  }
+}
+```
+
+> **How cursor pagination works:** On the first request, omit `cursor`. For the next page, pass the `nextCursor` value returned in the previous response as the `cursor` query parameter.
+
+---
+
+### `PATCH /api/todo/:id`
+
+Update an existing todo by its MongoDB `_id`.
+
+**Auth required:** ✅ Yes
+
+**URL Params:**
+| Param | Description |
+|---|---|
+| `id` | MongoDB ObjectId of the todo |
+
+**Request Body** (at least one field required):
+| Field | Type | Rules |
+|---|---|---|
+| `title` | `string` | min 3 characters, optional |
+| `isCompleted` | `boolean` | optional |
+| `date` | `string` / `Date` | valid date, optional |
+
+**Success Response `200`:**
+```json
+{
+  "success": true,
+  "message": "Todo Updated successfully",
+  "data": {
+    "todo": { ... }
+  }
+}
+```
+
+---
+
+### `DELETE /api/todo/:id`
+
+Delete a todo by its MongoDB `_id`.
+
+**Auth required:** ✅ Yes
+
+**URL Params:**
+| Param | Description |
+|---|---|
+| `id` | MongoDB ObjectId of the todo |
+
+**Success Response `200`:**
+```json
+{
+  "success": true,
+  "message": "Todo deleted successfully!"
+}
+```
+
+---
+
+### `GET /api/todo/get`
+
+Fetch todos filtered by a date range, with cursor-based pagination and completion status filter.
+
+**Auth required:** ✅ Yes
+
+**Query Parameters:**
+| Param | Type | Rules | Default |
+|---|---|---|---|
+| `startDate` | `Date string` | ISO date, optional | — |
+| `endDate` | `Date string` | ISO date, optional | — |
+| `isCompleted` | `boolean` | `true` or `false`, optional | — |
+| `limit` | `number` | min 1, max 20, optional | `15` |
+| `cursor` | `Date string` | must be ≥ `startDate` if both provided, optional | — |
+
+> **Validation Rules:**  
+> - `cursor` must not be earlier than `startDate`  
+> - `startDate` must not be later than `endDate`
+
+**Success Response `200`:**
+```json
+{
+  "success": true,
+  "data": {
+    "todos": [ ... ],
+    "hasNextPage": false,
+    "nextCursor": null
+  }
+}
+```
+
+---
+
+## 🔴 Common Error Responses
+
+| Status | Meaning |
+|---|---|
+| `400` | Bad request — validation failed or invalid input |
+| `401` | Unauthorized — missing or invalid/expired JWT |
+| `404` | Resource not found |
+| `429` | Too Many Requests — rate limit exceeded |
+| `500` | Internal Server Error |
+
+**Error body shape:**
+```json
+{
+  "success": false,
+  "message": "Descriptive error message here"
+}
+```
