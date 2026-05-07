@@ -9,7 +9,9 @@ export const validateData = (schema: z.ZodObject<any, any>, type: DataType = "bo
       if (type === "body") {
         res.locals.validatedBody = schema.parse(req.body);
       } else if (type === "query") {
+
         res.locals.validatedQuery = schema.parse(req.query);
+
       } else {
         res.locals.validatedParams = schema.parse(req.params);
       }

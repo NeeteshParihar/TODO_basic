@@ -148,6 +148,16 @@ export const getTodosByDateRange = async (req: Request, res: Response) => {
     // All values are already sanitized and coerced by Zod via res.locals
     const { cursor, limit = 15, isCompleted, startDate, endDate } = res.locals.validatedQuery;
 
+    
+    console.log({
+      cursor,
+      limit,
+      isCompleted,
+      startDate,
+      endDate,
+      userId
+    })
+
     const { todos, hasNextPage, nextCursor } = await getTodoByDateRange({
       cursor: cursor ?? null,
       limit: limit as number,

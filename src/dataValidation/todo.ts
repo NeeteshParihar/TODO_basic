@@ -28,7 +28,7 @@ export const TodoGetSchema = z.object({
 export const TodoGetByDateRangeSchema = z.object({
     limit: z.coerce.number().min(1).max(20).optional(),
     cursor: z.coerce.date().optional(),
-    isCompleted: z.coerce.boolean().optional(),
+    isCompleted: z.enum(["true", "false"]).transform((val) => val === "true").optional(),
     startDate: z.coerce.date().optional(),
     endDate: z.coerce.date().optional()
 }).refine((data) => {   
