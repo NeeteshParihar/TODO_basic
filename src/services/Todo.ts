@@ -80,7 +80,7 @@ interface IQuery {
   endDate: string | Date | undefined
   cursor: string | null | undefined
   limit: number
-  isCompleted: Boolean
+  isCompleted: boolean | undefined
 }
 
 
@@ -90,7 +90,7 @@ export const getTodoByDateRange = async ({
   endDate,
   cursor,
   limit = 15,
-  isCompleted = false
+  isCompleted 
 }: IQuery) => {
 
 
@@ -99,12 +99,16 @@ export const getTodoByDateRange = async ({
   if (cursor) dateFilter.$lt = cursor;
   else if (endDate) dateFilter.$lte = new Date(endDate) as Date;
 
-  const query: { isCompleted: Boolean | undefined, user: string, date?: object | undefined } = {
-    isCompleted: isCompleted,
+  const query: { isCompleted?: boolean | undefined, user: string, date?: object | undefined } = {  
     user: userId,
   }
 
+  // we can't add empty property in the object , so we check the length of the object
   if (Object.keys(dateFilter).length !== 0) query.date = dateFilter;
+  
+  // if isComplete is undeinfed that means we want both type of todos 
+  if(  typeof isCompleted === "boolean") query.isCompleted = isCompleted;
+  
   const todos = await Todo.find(query).sort({ date: -1 }).limit(limit + 1).lean();
 
 
@@ -120,3 +124,4 @@ export const getTodoByDateRange = async ({
 
 
 }
+

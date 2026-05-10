@@ -12,6 +12,8 @@ export const createTodo = async (req: Request, res: Response) => {
   try {
     const { title, date } = res.locals.validatedBody;
     const userId = String(req.user!.userId);
+    console.log("inside the createTodo");
+    console.log({title, date});
     const newTodo = await createTodoInDb(title, date, userId);
 
     res.status(201).json({
@@ -148,23 +150,13 @@ export const getTodosByDateRange = async (req: Request, res: Response) => {
     // All values are already sanitized and coerced by Zod via res.locals
     const { cursor, limit = 15, isCompleted, startDate, endDate } = res.locals.validatedQuery;
 
-    
-    console.log({
-      cursor,
-      limit,
-      isCompleted,
-      startDate,
-      endDate,
-      userId
-    })
-
     const { todos, hasNextPage, nextCursor } = await getTodoByDateRange({
       cursor: cursor ?? null,
       limit: limit as number,
       userId: userId,
       startDate: startDate as Date | undefined,
       endDate: endDate as Date | undefined,
-      isCompleted: isCompleted as Boolean
+      isCompleted: isCompleted as boolean | undefined
     });
 
     res.status(200).json({

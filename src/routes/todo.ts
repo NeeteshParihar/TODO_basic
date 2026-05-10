@@ -23,8 +23,8 @@ router.post("/", validateJwt, validateData(TodoSchema), createTodo);
 router.get("/", validateJwt, validateData(TodoGetSchema, "query"), getTodos);
 router.patch("/:id",validateJwt, validateData(TodoUpdateSchema), updateTodo);
 router.delete("/:id",validateJwt, deleteTodo);
-
-
 router.get("/get",validateJwt, validateData(TodoGetByDateRangeSchema, "query"), getTodosByDateRange);
+
+
 
 export default router;
