@@ -5,7 +5,8 @@ import {
   deleteTodoInDb,
   getTodosInDb,
   updateTodoInDb,
-  getTodoByDateRange
+  getTodoByDateRange,
+  getTodoGraph
 } from "../services/Todo.js";
 
 export const createTodo = async (req: Request, res: Response) => {
@@ -177,3 +178,27 @@ export const getTodosByDateRange = async (req: Request, res: Response) => {
     });
   }
 };
+
+
+export const getTodoGraphController = async (req: Request, res: Response) => {
+  try {
+    const userId = String(req.user!.userId);
+    const {targetDate} = res.locals.validatedQuery
+    const graph = await getTodoGraph({
+      userId,
+      targetDate,
+    });
+    res.status(200).json({
+      success: true,
+      data: {
+        graph,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: (err as Error).message,
+    });
+  }
+}

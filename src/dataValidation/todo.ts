@@ -50,3 +50,10 @@ export const TodoGetByDateRangeSchema = z.object({
 
 */
 
+
+export const TodoGetGraphSchema = z.object({
+    targetDate: z.coerce.date()
+})
+
+
+
