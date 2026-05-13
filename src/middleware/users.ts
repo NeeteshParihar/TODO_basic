@@ -7,6 +7,8 @@ import { IPayload } from "../types/user.js";
 
 import { isJWTBlocked } from "../services/redis.js";
 
+import { RESCODE } from "../utils/constants.js";
+
 
 export const validateJwt = async ( req: Request, res: Response, next: NextFunction ) => {
     try{
@@ -15,10 +17,10 @@ export const validateJwt = async ( req: Request, res: Response, next: NextFuncti
         const jwtToken = cookies.jwtToken;
         const payload: JwtPayload | null | string = decode(jwtToken);
 
-        if(!payload) return res.status(400).json({ success: false, message: "Please login!"});
+        if(!payload) return res.status(401).json({ success: false, message: "Please login!", accessTokenExpired: RESCODE.accessTokenExpired});
 
         const isBlocked = await isJWTBlocked(jwtToken);
-        if(isBlocked) return res.status(400).json({ success: false, message: "Please login again!"});
+        if(isBlocked) return res.status(401).json({ success: false, message: "Please login again!", accessTokenExpired: RESCODE.accessTokenExpired});
 
 
         const user = payload;
@@ -27,8 +29,8 @@ export const validateJwt = async ( req: Request, res: Response, next: NextFuncti
 
     }catch(err){
 
-        res.status(500).json({
-            success: false, message: "Internal server error!"
+        res.status(401).json({
+            success: false, message: "Internal server error!", clientError: RESCODE.clientError
         })
         
     }

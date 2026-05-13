@@ -1,8 +1,10 @@
 
 
 export const RESCODE = {
-    serverError: "serverError",
-    clientError: "clientError",
-    accessTokenInvalid: "accessTokenInvalid",
-    refreshTokenInvalid: "refreshTokenInvalid"
+    serverError: true,
+    clientError: true,
+    accessTokenInvalid: true,
+    accessTokenExpired: true,
+    refreshTokenInvalid: true,
+    refreshTokenExpired: true
 }

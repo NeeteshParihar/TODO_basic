@@ -36,8 +36,7 @@ export const TodoGetByDateRangeSchema = z.object({
     if (data.startDate && data.endDate && data.startDate > data.endDate) return false;
     return true;
 }, {
-    message: "Invalid get request!", 
-    
+    message: "Invalid get request!",     
 })
 
 /* 
@@ -45,11 +44,8 @@ export const TodoGetByDateRangeSchema = z.object({
     date: Date;
     isCompleted: boolean;
     user: Schema.Types.ObjectId | string
-
      title, date, isCompleted
-
 */
-
 
 export const TodoGetGraphSchema = z.object({
     targetDate: z.coerce.date()

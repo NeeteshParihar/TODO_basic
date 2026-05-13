@@ -167,7 +167,7 @@ export const refreshTheToken = async (req: Request, res: Response) => {
     // if reftoken is not given or if reftoken is not valid : in that case payload will be undefined
     if (!refToken || !payload )
       return res
-        .status(400)
+        .status(401)
         .json({ success: false, message: "Please login Again!", refreshTokenInvalid: RESCODE.refreshTokenInvalid });   
 
     // find the refresh token record in database
@@ -175,8 +175,8 @@ export const refreshTheToken = async (req: Request, res: Response) => {
 
     if (!token || !token.expiresAt || token.expiresAt < new Date()) {
       return res
-        .status(400)
-        .json({ success: false, message: "Please login Again!",  refreshTokenInvalid: RESCODE.refreshTokenInvalid });
+        .status(401)
+        .json({ success: false, message: "Please login Again!",  refreshTokenExpired: RESCODE.refreshTokenExpired });
     }  
 
     // if the user have the token and also a valid token then give the access tokens
@@ -187,9 +187,11 @@ export const refreshTheToken = async (req: Request, res: Response) => {
 
   } catch (err) {
     console.log(err)
-    res.status(500).json({
+    res.status(401).json({
       success: false,
-      message: "Internal server error"
+      message: "Internal server error",
+      clientError: RESCODE.clientError
+
     })
   }
 };
