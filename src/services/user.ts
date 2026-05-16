@@ -30,7 +30,13 @@ export const createUser = async ( {_id, username, email, password}:IUser ): Prom
         email,
         password: hashCode
     });
-    return newUser;
+
+    // Use destructuring to safely omit the password property instead of 'delete'
+    const { password: _, ...userData } = newUser.toObject();    
+    return {
+        ...userData,
+        _id: String(userData._id),
+    };
     
 }
 
@@ -39,7 +45,10 @@ export const getUser = async ( identifier: string, fields: string[] = ['username
     const prop = fields.join(' ');
     const isEmail = identifier.includes('@');    
     const user = isEmail ? await User.findOne({ email: identifier }).select(prop) : await User.findOne({ _id: identifier}).select(prop);
-    return user;
+     return !user? null: {
+        ...user.toObject(),
+        _id: String(user._id)
+     }
 }
 
 export const deleteUserFromDB = async( userId: string) => {

@@ -55,7 +55,6 @@ export const signUp = async (req: Request, res: Response) => {
       email,
       password,
     });
-
     setCookie(jwtToken, res);
     setRefToken(refToken, res);
 
@@ -63,11 +62,7 @@ export const signUp = async (req: Request, res: Response) => {
       success: true,
       message: "User created successfully",
       data: {
-        user: {
-          _id: newUser._id,
-          username: newUser.username,
-          email: newUser.email,
-        },
+        user: newUser
       },
     });
   } catch (err) {
@@ -84,15 +79,15 @@ export const signUp = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = res.locals.validatedBody;
-    const user = await getUser(email, ["username", "email", "password"]);
+    const user = await getUser(email, ["username", "email", "password", "avatar", "dob"]);
 
     if (!user || !(await comparePassword(password, user.password)))
       return res.status(400).json({
         success: false,
         message: "Invalid credentials",
-      });
+      });     
 
-    const _id: string = String(user._id);
+    const _id: string = user._id;
 
     const jwtToken = generateJwt({ userId: _id });
     const refToken = generateRefToken({ userId: _id });
@@ -102,16 +97,16 @@ export const login = async (req: Request, res: Response) => {
     setCookie(jwtToken, res);
     setRefToken(refToken, res);
 
+    const { password: _, ...userData} = user;
+
     res.status(200).json({
       success: true,
       message: "User logged in successfully",
       data: {
-        user: {
-          username: user.username,
-          email: user.email,
-        },
-      },
+        user: userData
+      }, 
     });
+
   } catch (err: any) {
     console.log(err);
 
@@ -199,7 +194,7 @@ export const refreshTheToken = async (req: Request, res: Response) => {
 export const getUserPrfile = async (req: Request, res: Response) => {
   try {
     // implement middleware to verify the user
-    console.log(req.user);
+  
     const userId = String(req.user!.userId);
     const user = await getUser(userId, ["username", "email", "avatar", "dob"]);
     if (!user)
