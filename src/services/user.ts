@@ -5,6 +5,7 @@ import {Schema} from "mongoose";
 
 type IdType = Schema.Types.ObjectId;
 
+import type { UserType } from "../types/user.js";
 
 export const checkUserInDb = async (email: string) => {
     const isExists  = await User.exists({ email});
@@ -19,7 +20,7 @@ interface IUser {
     password: string
 }
 
-export const createUser = async ( {_id, username, email, password}:IUser ) => {
+export const createUser = async ( {_id, username, email, password}:IUser ): Promise<UserType> => {
 
     const hashCode = await hashPassword(password);
 
