@@ -13,7 +13,8 @@ interface IUser {
 const userSchema = new Schema<IUser>({
     username: {
         type: String,
-        required: true
+        required: true,
+        min: 2
     },
     email: {
         type: String,

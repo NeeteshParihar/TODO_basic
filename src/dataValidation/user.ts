@@ -5,7 +5,7 @@ const Password = z.string().trim().min(8);
 
 // data validations and sanitization , remember if we pass the extra fields then those extra fields are only checked at shcema level
 export const userSignupSchema = z.object({
-    username: z.string().trim().min(3),
+    username: z.string().trim().min(2),
     email: Email,
     password: Password
 })
