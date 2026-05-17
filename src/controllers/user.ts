@@ -17,6 +17,7 @@ import {
   createUser,
   getUser,
   deleteUserFromDB,
+  updateUserInDB,
 } from "../services/user.js";
 
 import {
@@ -239,6 +240,36 @@ export const deleteUser = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       message: "User deleted successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: (err as Error).message,
+    });
+  }
+};
+
+export const updateUser = async (req: Request, res: Response) => {
+  try {
+    const userId = String(req.user!.userId);
+    const { username, dob } = res.locals.validatedBody;
+
+    const updatedUser = await updateUserInDB(userId, username, dob);
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found or no updates provided",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      data: {
+        user: updatedUser,
+      },
     });
   } catch (err) {
     res.status(500).json({

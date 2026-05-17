@@ -60,3 +60,27 @@ export const deleteUserFromDB = async( userId: string) => {
 
 
 
+export const updateUserInDB = async (userId: string, username?: string, dob?: string) => {
+    const updateQuery: Record<string, any> = {};
+    
+    if (username !== undefined && username !== null) {
+        updateQuery.username = username;
+    }
+    if (dob !== undefined && dob !== null) {
+        updateQuery.dob = dob;
+    }
+
+    if (Object.keys(updateQuery).length === 0) return null;
+
+    const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $set: updateQuery },
+        { returnDocument: "after", runValidators: true }
+    ).select('-password');
+
+    return updatedUser ? {
+        ...updatedUser.toObject(),
+        _id: String(updatedUser._id)
+    } : null;
+}
+

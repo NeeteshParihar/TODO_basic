@@ -15,3 +15,27 @@ export const userloginSchema = z.object({
     password: Password
 })
 
+// ctx: this is the context an object in which we can add the issues or errors
+// z.NEVER: this is a constant that tells zod --> stop validating this data its completed broken or invalid this helps us to stop checking just after return
+// code:  z.ZodIssueCode.custom --> it tells zod that we are returning a cursom error so it won't check it against its built in types 
+export const IUserUpdate = z.object({
+    username: z.string().trim().min(2).optional(),
+    dob: z.string().superRefine((val, ctx) => {
+        const date = new Date(val);
+        if (isNaN(date.getTime())) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Invalid date format",
+            });
+            return z.NEVER;
+        }
+        if (date > new Date()) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Date of birth cannot be in the future",
+            });
+        }
+    }).optional()
+}).refine(data => data.username !== undefined || data.dob !== undefined, {
+    message: "Provide at least one field to update"
+});

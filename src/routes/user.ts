@@ -6,9 +6,10 @@ import {
   getUserPrfile,
   deleteUser,
   refreshTheToken,
+  updateUser,
 } from "../controllers/user.js";
 
-import { userSignupSchema,  userloginSchema } from "../dataValidation/user.js";
+import { userSignupSchema,  userloginSchema, IUserUpdate } from "../dataValidation/user.js";
 import { validateData } from "../middleware/dataValidation.js";
 import { validateJwt } from "../middleware/users.js";
 import { rateLimiter } from "../middleware/rateLimiter.js";
@@ -22,6 +23,7 @@ router.post("/auth/logout",validateJwt, logout);
 router.post("/auth/refreshToken", refreshTheToken);
 router.get("/profile", validateJwt, getUserPrfile);
 router.delete("/", validateJwt, deleteUser);
+router.patch("/", validateJwt, validateData(IUserUpdate), updateUser);
 
 
 export default router;
