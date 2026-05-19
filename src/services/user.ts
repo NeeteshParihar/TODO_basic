@@ -83,4 +83,3 @@ export const updateUserInDB = async (userId: string, username?: string, dob?: st
         _id: String(updatedUser._id)
     } : null;
 }
-
