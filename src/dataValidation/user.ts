@@ -39,3 +39,12 @@ export const IUserUpdate = z.object({
 }).refine(data => data.username !== undefined || data.dob !== undefined, {
     message: "Provide at least one field to update"
 });
+
+export const otpEmailSchema = z.object({
+    email: Email,
+});
+
+export const otpValidateSchema = z.object({
+    email: Email,
+    otp: z.string().trim().min(1),
+});

@@ -87,12 +87,8 @@ export const blockJWT = async (token: string) => {
   const ttl = (payload.exp as number) - Math.floor(Date.now() / 1000); 
 
   if( ttl <= 0) return;
-
   // Use a transaction to set the key and its expiration atomically
-  await client.multi()
-    .set(key, "1")
-    .expire(key, ttl)
-    .exec();
+  await client.set(key, "1", {EX: ttl});   
 };
 
 
@@ -108,4 +104,48 @@ export const isJWTBlocked = async (token: string): Promise<boolean> => {
   return exists === 1;
 };
 
+export interface IStoreValueRedis {
+  prefix: string;
+  key: string;
+  value: string;
+  ttl: number;
+}
 
+export interface IGetOrDeleteValueRedis {
+  prefix: string;
+  key: string;
+}
+
+export const storeValueRedis = async ({ prefix, key, value, ttl }: IStoreValueRedis) => {
+  const redisKey = `${prefix}:${key}`;
+  await client.set(redisKey, value, { EX: ttl });
+};
+
+export const deleteValueRedis = async ({ prefix, key }: IGetOrDeleteValueRedis): Promise<boolean> => {
+  const redisKey = `${prefix}:${key}`;
+  const result = await client.del(redisKey);
+  return result > 0;
+};
+
+export const checkValueExistsRedis = async ({ prefix, key }: IGetOrDeleteValueRedis): Promise<boolean> => {
+  const redisKey = `${prefix}:${key}`;
+  const exists = await client.exists(redisKey);
+  return exists === 1;
+};
+
+export const getValueRedis = async ({ prefix, key }: IGetOrDeleteValueRedis) => {
+  const redisKey = `${prefix}:${key}`;
+  const replies = await client.multi()
+    .get(redisKey)
+    .ttl(redisKey)
+    .exec();
+
+  if (!replies) {
+    return { value: null, ttl: -2 };
+  }
+
+  const value = replies[0] as unknown as string | null;
+  const ttl = replies[1] as unknown as number;
+
+  return { value, ttl };
+};

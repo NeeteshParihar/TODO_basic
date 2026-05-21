@@ -5,6 +5,7 @@ import { connectDB } from "./dbconfig/mongodb.js";
 
 import userRouter from "./routes/user.js";
 import todoRouter from "./routes/todo.js";
+import recoverRouter from "./routes/recover.js";
 import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -35,6 +36,7 @@ app.use(cookieParser()); //parser cookie from header to js object and adds to th
 // // setup the middleware for using the route
 app.use("/api/user", userRouter);
 app.use("/api/todo", todoRouter);
+app.use("/api/recover", recoverRouter);
 
 app.use((req, res) => {
   res.status(404).json({
