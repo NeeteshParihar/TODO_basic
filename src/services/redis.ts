@@ -18,7 +18,7 @@ export const isUserAllowed = async (userId: string, endpoint: string): Promise<b
   // if the key exists it returns 1 else  0
   const exists = await client.exists(key);
 
-  if (!exists) {652
+  if (!exists) {
 
     const replies = await client.multi()
       .incr(key)
@@ -84,7 +84,7 @@ export const blockJWT = async (token: string) => {
   // now the jwt is verified i.e its correct and not expired yet , so we have to store it in redis to prevent its further use 
   const key = `blockedJWT:${token}`;
 
-  const ttl = payload.exp - Math.floor(Date.now() / 1000); 
+  const ttl = (payload.exp as number) - Math.floor(Date.now() / 1000); 
 
   if( ttl <= 0) return;
 
@@ -93,9 +93,8 @@ export const blockJWT = async (token: string) => {
     .set(key, "1")
     .expire(key, ttl)
     .exec();
-
-
 };
+
 
 /**
  * Checks if a JWT token has been blocked.
@@ -108,3 +107,5 @@ export const isJWTBlocked = async (token: string): Promise<boolean> => {
   const exists = await client.exists(key);
   return exists === 1;
 };
+
+
