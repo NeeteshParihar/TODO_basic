@@ -1,6 +1,8 @@
 
 <!--  future improvements -->
 
+
+
 # Backend Application Review & Future Improvement Plan
 
 This document outlines a review of the current TodoApp backend architecture and provides a structured plan for future improvements. The application is a solid foundation built with Express, TypeScript, MongoDB, and Redis, featuring JWT-based authentication, rate limiting, and cursor-based pagination.

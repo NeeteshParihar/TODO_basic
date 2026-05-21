@@ -150,7 +150,7 @@ export const getTodoGraph = async ({
   const endOfDay = new Date(targetDate);
   endOfDay.setHours(23, 59, 59, 999);
 
-  const pipeline = [
+  const pipeline: any[] = [
     {
       // Step 1: Filter for the specific 24-hour range
       $match: {

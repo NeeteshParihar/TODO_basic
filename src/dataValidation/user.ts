@@ -48,3 +48,7 @@ export const otpValidateSchema = z.object({
     email: Email,
     otp: z.string().trim().min(1),
 });
+
+export const resetPasswordSchema = z.object({
+    password: Password,
+});

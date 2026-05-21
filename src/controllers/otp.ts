@@ -1,8 +1,9 @@
 import { type Request, type Response } from "express";
-import { checkUserInDb } from "../services/user.js";
+import { checkUserInDb, resetUserPasswordInDB } from "../services/user.js";
 import { deleteValueRedis, storeValueRedis, checkValueExistsRedis, getValueRedis } from "../services/redis.js";
 import { generateAlphanumericOTP, hashOtp, verifyOtp } from "../utils/crypto.js";
 import { sendEmail } from "../services/mail.js";
+import { generateResetToken, decodeResetToken } from "../utils/Jwt.js";
 
 export const sendOtp = async (req: Request, res: Response) => {
   try {
@@ -49,10 +50,9 @@ export const sendOtp = async (req: Request, res: Response) => {
   }
 };
 
-// 1. Controller to validate the OTP
+// 1. Controller to validate the OTP and issue a short-lived recovery token (Method 2)
 export const validateOtp = async (req: Request, res: Response) => {
   try {
-
     const email = res.locals.validatedBody?.email;
     const otp = res.locals.validatedBody?.otp;
 
@@ -67,10 +67,58 @@ export const validateOtp = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "Invalid OTP" });
     }
 
-    // 4. Respond OK
+    // Delete OTP once it's successfully validated to prevent reuse
+    await deleteValueRedis({ prefix: "OTP", key: email });
+
+    // Generate a secure, short-lived reset token (valid for 10 minutes)
+    const resetToken = generateResetToken(email);
+
+    // 4. Respond OK with the resetToken
     res.status(200).json({
       success: true,
-      message: "OTP validated successfully"
+      message: "OTP validated successfully",
+      resetToken
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: (err as Error).message,
+    });
+  }
+};
+
+// Controller to reset the password using the reset token (Method 2)
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { password } = res.locals.validatedBody || req.body;
+    
+    // Extract resetToken from Authorization header: "Bearer <token>"
+    const authHeader = req.headers.authorization;
+    const resetToken = authHeader && authHeader.startsWith("Bearer ") 
+      ? authHeader.split(" ")[1] 
+      : req.body.resetToken;
+
+    if (!resetToken) {
+      return res.status(401).json({ success: false, message: "Reset token is missing or unauthorized" });
+    }
+
+    // Verify and decode the reset token
+    const decoded = decodeResetToken(resetToken);
+    if (!decoded || !decoded.email) {
+      return res.status(401).json({ success: false, message: "Invalid or expired reset token" });
+    }
+
+    // Update password in DB
+    const isUpdated = await resetUserPasswordInDB(decoded.email, password);
+    if (!isUpdated) {
+      return res.status(500).json({ success: false, message: "Failed to reset password. Please try again." });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successfully. Please log in with your new password."
     });
 
   } catch (err) {

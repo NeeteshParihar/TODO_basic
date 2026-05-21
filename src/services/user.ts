@@ -82,4 +82,13 @@ export const updateUserInDB = async (userId: string, username?: string, dob?: st
         ...updatedUser.toObject(),
         _id: String(updatedUser._id)
     } : null;
-}
+};
+
+export const resetUserPasswordInDB = async (email: string, password: string): Promise<boolean> => {
+    const hashedPassword = await hashPassword(password);
+    const result = await User.updateOne(
+        { email },
+        { $set: { password: hashedPassword } }
+    );
+    return result.modifiedCount > 0;
+};

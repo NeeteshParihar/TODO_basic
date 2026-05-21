@@ -79,3 +79,19 @@ export const clearRefToken = (res: Response) => {
     path: "/api/user/auth",
   });
 };
+
+export const generateResetToken = (email: string): string => {
+  const token = jwt.sign({ email }, SECRET, {
+    expiresIn: "10m",
+  });
+  return token;
+};
+
+export const decodeResetToken = (token: string): { email: string } | null => {
+  try {
+    const payload = jwt.verify(token, SECRET);
+    return payload as { email: string };
+  } catch (error) {
+    return null;
+  }
+};
