@@ -81,7 +81,9 @@ export const clearRefToken = (res: Response) => {
 };
 
 export const generateResetToken = (email: string): string => {
-  const token = jwt.sign({ email }, SECRET, {
+  const key = process.env.RESET_TOKEN_KEY as string; 
+  if( !key ) throw new Error("Reset token key is not defined");
+  const token = jwt.sign({ email }, key , {
     expiresIn: "10m",
   });
   return token;
@@ -89,9 +91,12 @@ export const generateResetToken = (email: string): string => {
 
 export const decodeResetToken = (token: string): { email: string } | null => {
   try {
-    const payload = jwt.verify(token, SECRET);
+    const key = process.env.RESET_TOKEN_KEY as string;
+    if (!key) throw new Error("Reset token key is not defined");
+    const payload = jwt.verify(token, key);
     return payload as { email: string };
   } catch (error) {
     return null;
   }
 };
+

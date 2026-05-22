@@ -51,4 +51,5 @@ export const otpValidateSchema = z.object({
 
 export const resetPasswordSchema = z.object({
     password: Password,
+    resetToken: z.string().trim().min(1),
 });

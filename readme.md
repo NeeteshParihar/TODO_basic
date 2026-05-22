@@ -267,6 +267,111 @@ Permanently delete the authenticated user's account. Also blocks the current JWT
 
 ---
 
+## 🔄 Recover Routes — `/api/recover`
+
+Used for password recovery flow. No authentication required.
+
+---
+
+### `POST /api/recover/passwordReset`
+
+Send a one-time password (OTP) to the user's email for password recovery.
+
+**Auth required:** ❌ No
+
+**Request Body:**
+| Field | Type | Validation Rules |
+|---|---|---|
+| `email` | `string` | Valid email, trimmed, lowercased |
+
+**Success Response `200`:**
+```json
+{
+  "success": true,
+  "message": "OTP sent successfully",
+  "expiresAt": "2026-05-14T05:19:00.000Z"
+}
+```
+
+**Error `404` (User not found):**
+```json
+{ "success": false, "message": "User not found" }
+```
+
+**Error `429` (OTP recently requested):**
+```json
+{ "success": false, "message": "Multiple attempts. Please try again later." }
+```
+
+> **Note:** The generated OTP is valid for 5 minutes and stored securely in Redis.
+
+---
+
+### `POST /api/recover/validateOtp`
+
+Validate the OTP sent to the email and issue a short-lived reset token.
+
+**Auth required:** ❌ No
+
+**Request Body:**
+| Field | Type | Validation Rules |
+|---|---|---|
+| `email` | `string` | Valid email, trimmed, lowercased |
+| `otp` | `string` | Trimmed, min 1 character |
+
+**Success Response `200`:**
+```json
+{
+  "success": true,
+  "message": "OTP validated successfully",
+  "resetToken": "<jwt_reset_token>"
+}
+```
+
+**Error `400` (OTP expired or not found):**
+```json
+{ "success": false, "message": "OTP expired or not found" }
+```
+
+**Error `400` (Invalid OTP):**
+```json
+{ "success": false, "message": "Invalid OTP" }
+```
+
+> **Note:** Once validated successfully, the OTP is deleted from Redis to prevent reuse. The returned `resetToken` is valid for 10 minutes.
+
+---
+
+### `POST /api/recover/resetPassword`
+
+Reset the user's password using the token received from the validate OTP step.
+
+**Auth required:** ❌ No (but requires `resetToken`)
+
+**Headers / Body:**
+Provide the reset token in either the `Authorization` header (`Bearer <token>`) or the request body (`resetToken`).
+
+**Request Body:**
+| Field | Type | Validation Rules |
+|---|---|---|
+| `password` | `string` | Trimmed, min 8 characters |
+| `resetToken` | `string` | Optional (if provided in `Authorization` header) |
+
+**Success Response `200`:**
+```json
+{
+  "success": true,
+  "message": "Password reset successfully. Please log in with your new password."
+}
+```
+
+**Error `401` (Missing or invalid token):**
+```json
+{ "success": false, "message": "Reset token is missing or unauthorized" }
+```
+
+---
+
 ## ✅ Todo Routes — `/api/todo`
 
 Rate-limited per IP (key: `"todos"`). All routes require authentication.

@@ -22,15 +22,15 @@ export const validateJwt = async ( req: Request, res: Response, next: NextFuncti
         const isBlocked = await isJWTBlocked(jwtToken);
         if(isBlocked) return res.status(401).json({ success: false, message: "Please login again!", accessTokenExpired: RESCODE.accessTokenExpired});
 
-
         const user = payload;
+        if(!user || user._id) throw new Error("Invalid user")
         req.user = user as IPayload;
         next();
 
     }catch(err){
 
         res.status(401).json({
-            success: false, message: "Internal server error!", clientError: RESCODE.clientError
+            success: false, message: (err as Error).message, clientError: RESCODE.clientError
         })
         
     }

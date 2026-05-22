@@ -98,7 +98,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     const authHeader = req.headers.authorization;
     const resetToken = authHeader && authHeader.startsWith("Bearer ") 
       ? authHeader.split(" ")[1] 
-      : req.body.resetToken;
+      : res.locals.validatedBody?.resetToken;
 
     if (!resetToken) {
       return res.status(401).json({ success: false, message: "Reset token is missing or unauthorized" });
@@ -110,11 +110,20 @@ export const resetPassword = async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, message: "Invalid or expired reset token" });
     }
 
+    // check if it is blocked
+    const isBlocked = await checkValueExistsRedis({ prefix: "RESET_TOKEN_BLACKLIST", key: resetToken });
+    if (isBlocked) {
+      return res.status(401).json({ success: false, message: "Invalid request! Try again later." });
+    } 
+
     // Update password in DB
     const isUpdated = await resetUserPasswordInDB(decoded.email, password);
     if (!isUpdated) {
       return res.status(500).json({ success: false, message: "Failed to reset password. Please try again." });
     }
+
+    // blacklist the reset token (10 mins)
+    await storeValueRedis({ prefix: "RESET_TOKEN_BLACKLIST", key: resetToken, value: decoded.email, ttl: 10 * 60 });
 
     res.status(200).json({
       success: true,
