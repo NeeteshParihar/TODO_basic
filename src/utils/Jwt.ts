@@ -38,8 +38,8 @@ export const clearJwt = (res: Response) => {
 export const setCookie = (token: string, res: Response) => {
   res.cookie("jwtToken", token, {
     httpOnly: true, // Prevents JavaScript access (XSS protection)
-    secure: process.env.NODE_ENV === "production", // Only sends over HTTPS in production
-    sameSite: "strict", // Prevents CSRF attacks
+    secure: true, // MUST be true for SameSite="none"
+    sameSite: "none", // Allows cross-site cookie usage
     maxAge: 15 * 60 * 1000, // Match the JWT expiration ( 15 minutes in milliseconds)
   });
 };
@@ -63,8 +63,8 @@ export const decodeRefToken = (token: string): IPayload | null => {
 export const setRefToken = (refToken: string, res: Response) => {
   res.cookie("refToken", refToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    secure: true, // MUST be true for SameSite="none"
+    sameSite: "none", // Allows cross-site cookie usage
     maxAge: 24 * 60 * 60 * 1000,
     path: "/api/user/auth",
   });
@@ -73,8 +73,8 @@ export const setRefToken = (refToken: string, res: Response) => {
 export const clearRefToken = (res: Response) => {
   res.clearCookie("refToken", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    secure: true,
+    sameSite: "none",
     maxAge: 24 * 60 * 60 * 1000,
     path: "/api/user/auth",
   });
