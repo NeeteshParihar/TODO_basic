@@ -14,7 +14,9 @@ import cors from "cors";
 const port: number = Number(process.env["PORT"]) || 3000;
 const app = express();
 
-const allowedOrigins = [process.env.frontend_url as string];
+// Remove trailing slash if present to prevent CORS mismatch
+const frontendUrl = (process.env.frontend_url || "").replace(/\/$/, "");
+const allowedOrigins = [frontendUrl, "http://localhost:5173"];
 
 // add the cors configurations
 app.use(cors({
