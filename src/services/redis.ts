@@ -4,35 +4,37 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 export const maxRateLimit = 100;
 const WINDOW_SIZE_IN_SECONDS = 60;
 
+export interface IRateLimitStatus { remainingReqLeft: number; ttlLeft: number; }
+
+export interface IRateLimiterHelpers {
+  isUserAllowed: () => Promise<boolean>;
+  getRateLimitStatus: () => Promise<IRateLimitStatus>;
+}
+
+
 /**
  * Checks if the user is allowed to make a request based on rate limit.
  * Uses a fixed window size of 60 seconds.
  * 
  * @param userId The ID of the user.
  * @returns boolean True if allowed, false if rate limit exceeded.
- */
-export const isUserAllowed = async (userId: string, endpoint: string): Promise<boolean> => {
-
+ */export const isUserAllowed = async (userId: string, endpoint: string, rateLimit = maxRateLimit, ttl = WINDOW_SIZE_IN_SECONDS): Promise<boolean> => {
   const key = `rate_limit:${userId}:${endpoint}`;
 
-  // if the key exists it returns 1 else  0
-  const exists = await client.exists(key);
+  // 1. Run INCR and check the TTL in a single transaction
+  const replies = await client.multi()
+    .incr(key)
+    .ttl(key)
+    .exec();
 
-  if (!exists) {
+  const count = replies[0] as unknown as number;
+  const currentTtl = replies[1] as unknown as number;
 
-    const replies = await client.multi()
-      .incr(key)
-      .expire(key, WINDOW_SIZE_IN_SECONDS)
-      .exec();
-
-    const count = replies[0] as unknown as number;
-    return count <= maxRateLimit;
-
-  } else {
-    // For subsequent requests, just increment the count
-    const count = await client.incr(key);
-    return count <= maxRateLimit;
+  // 2. If it's the very first request (count is 1) OR if the key somehow lost its TTL (-1), set the expiration
+  if (count === 1 || currentTtl === -1) {
+    await client.expire(key, ttl);
   }
+  return count <= rateLimit;
 };
 
 /**
@@ -41,7 +43,7 @@ export const isUserAllowed = async (userId: string, endpoint: string): Promise<b
  * @param userId The ID of the user.
  * @returns Object containing remainingReqLeft and ttlLeft
  */
-export const getRateLimitStatus = async (userId: string, endpoint: string) => {
+export const getRateLimitStatus = async (userId: string, endpoint: string, rateLimit = maxRateLimit): Promise<IRateLimitStatus> => {
 
   const key = `rate_limit:${userId}:${endpoint}`;
 
@@ -54,8 +56,7 @@ export const getRateLimitStatus = async (userId: string, endpoint: string) => {
   const ttl = replies[1] as unknown as number;
 
   const count = countStr ? parseInt(countStr, 10) : 0;
-
-  let remainingReqLeft = maxRateLimit - count;
+  let remainingReqLeft = rateLimit - count;
   if (remainingReqLeft < 0) {
     remainingReqLeft = 0;
   }
@@ -73,22 +74,29 @@ export const getRateLimitStatus = async (userId: string, endpoint: string) => {
 
 };
 
+export const getRateLimiterHelpers = (userId: string, endpoint: string, rateLimit = 100, ttl = 60): IRateLimiterHelpers => {
+  return {
+    isUserAllowed: async () => await isUserAllowed(userId, endpoint, rateLimit, ttl),
+    getRateLimitStatus: async () => await getRateLimitStatus(userId, endpoint, rateLimit)
+  }
+}
+
 /**
  * Blocks a JWT by storing it in Redis until its expiration time.
  * 
  * @param token The JWT string to block.
  */
-export const blockJWT = async (token: string) => { 
+export const blockJWT = async (token: string) => {
 
   const payload = jwt.verify(token, process.env.SECRET_KEY as string) as JwtPayload;
   // now the jwt is verified i.e its correct and not expired yet , so we have to store it in redis to prevent its further use 
   const key = `blockedJWT:${token}`;
 
-  const ttl = (payload.exp as number) - Math.floor(Date.now() / 1000); 
+  const ttl = (payload.exp as number) - Math.floor(Date.now() / 1000);
 
-  if( ttl <= 0) return;
+  if (ttl <= 0) return;
   // Use a transaction to set the key and its expiration atomically
-  await client.set(key, "1", {EX: ttl});   
+  await client.set(key, "1", { EX: ttl });
 };
 
 

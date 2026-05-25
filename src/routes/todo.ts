@@ -14,9 +14,7 @@ import { TodoSchema, TodoUpdateSchema, TodoGetSchema, TodoGetByDateRangeSchema, 
 
 
 import { rateLimiter } from "../middleware/rateLimiter.js";
-
 const router = Router();
-
 router.use(rateLimiter("todos"));
 
 
